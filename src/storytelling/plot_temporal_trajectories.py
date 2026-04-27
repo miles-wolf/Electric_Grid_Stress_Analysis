@@ -71,12 +71,12 @@ def plot_trajectory_combined(df_win: pd.DataFrame, ba: str, event_id: int):
     l1, = ax_top.plot(df_win[DATE_COL], df_win[LOAD_COL], color="tab:blue", label="Peak Load (z)")
     l2, = ax_top_r.plot(df_win[DATE_COL], df_win[RAMP_COL], color="tab:orange", label="Max Ramp (z)")
 
-    ax_top.set_ylabel("Peak Load (z)")
-    ax_top_r.set_ylabel("Max Ramp (z)")
+    ax_top.set_ylabel("Peak Load (z)", fontsize=16)
+    ax_top_r.set_ylabel("Max Ramp (z)", fontsize=16)
     ax_top.grid(alpha=0.3)
 
     # One combined legend for top panel - positioned dynamically to avoid data
-    ax_top.legend(handles=[l1, l2], loc="best", frameon=True, framealpha=0.9)
+    ax_top.legend(handles=[l1, l2], loc="best", frameon=True, framealpha=0.9, fontsize=13)
 
     # -------------------------
     # BOTTOM: Cluster (left) + Fragility (right)
@@ -100,16 +100,16 @@ def plot_trajectory_combined(df_win: pd.DataFrame, ba: str, event_id: int):
     )
     ax_bot_r.axhline(0, color="gray", linestyle="--", alpha=0.6)
 
-    ax_bot.set_ylabel("Cluster ID")
-    ax_bot_r.set_ylabel("Fragility (z)")
+    ax_bot.set_ylabel("Cluster ID", fontsize=16)
+    ax_bot_r.set_ylabel("Fragility (z)", fontsize=16)
     ax_bot.grid(alpha=0.3)
-    ax_bot.set_xlabel("Date")
+    ax_bot.set_xlabel("Date", fontsize=16)
 
     # Make cluster ticks integers (helps readability)
     ax_bot.yaxis.set_major_locator(mticker.MaxNLocator(integer=True))
 
     # One combined legend for bottom panel - positioned dynamically to avoid data
-    ax_bot.legend(handles=[l3, l4], loc="best", frameon=True, framealpha=0.9)
+    ax_bot.legend(handles=[l3, l4], loc="best", frameon=True, framealpha=0.9, fontsize=13)
 
     # -------------------------
     # Shared x formatting (2-day tick spacing, rotated labels)

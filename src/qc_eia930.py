@@ -16,7 +16,7 @@ def main():
     
     expected = 365 * 24 * 2  # 2025 full year * hourly * 2 BAs
     if len(df) != expected:
-    print(f"WARNING: expected {expected} rows, got {len(df)}")
+        print(f"WARNING: expected {expected} rows, got {len(df)}")
 
 
     print("QC SOURCE:", src)

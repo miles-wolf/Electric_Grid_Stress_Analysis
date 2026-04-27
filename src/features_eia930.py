@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from src.feature_utils import add_size_normalized_features, add_rolling_zscores
+from src.feature_utils import add_size_normalized_features, add_rolling_zscores, repair_demand_spikes
 
 
 
@@ -170,6 +170,9 @@ def main(in_path: Path, out_path: Path) -> None:
 
     # Sort so diff works correctly per BA
     df = df.sort_values([ba_col, ts_col])
+
+    # Repair isolated single-hour demand spikes before computing ramps
+    df = repair_demand_spikes(df, ba_col=ba_col, ts_col=ts_col, demand_col="demand_mw")
 
     # Hourly ramp per BA
     df["ramp_mw"] = df.groupby(ba_col)["demand_mw"].diff()

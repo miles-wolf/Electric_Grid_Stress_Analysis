@@ -22,6 +22,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
+from src.feature_utils import repair_demand_spikes as _repair_demand_spikes
+
 
 # -----------------------------
 # CONFIG: update paths here only
@@ -41,7 +43,6 @@ COL_DEMAND = "demand_(mw)_(adjusted)"
 # Fragility feature settings
 NEAR_PEAK_THRESHOLD = 0.95  # hours at >= 95% of daily peak count as "near peak"
 TOP_N_DAYS = 10
-
 
 def ensure_dirs() -> None:
     OUTPUT_PARQUET.parent.mkdir(parents=True, exist_ok=True)
@@ -81,6 +82,10 @@ def load_hourly() -> pd.DataFrame:
     df = df.dropna(subset=[COL_DEMAND]).copy()
 
     return df
+
+
+def repair_demand_spikes(df: pd.DataFrame) -> pd.DataFrame:
+    return _repair_demand_spikes(df, ba_col=COL_BA, ts_col=COL_TS, demand_col=COL_DEMAND)
 
 
 def engineer_daily_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -180,56 +185,23 @@ def save_outputs(daily: pd.DataFrame) -> None:
 
 
 def plot_timeseries(daily: pd.DataFrame) -> None:
-    """
-    Writes a single stacked time series figure with two panels:
-      (a) min–max scaled fragility_01 (per BA)
-      (b) robust-scaled fragility using 5th–95th percentiles (per BA), clipped to [0,1]
-    """
     d = daily.copy()
     d["date"] = pd.to_datetime(d["date"])
     bas = sorted(d[COL_BA].unique())
 
-    # --- Robust scaling helper (5th–95th percentile, per BA) ---
-    def robust_scale_5_95(s: pd.Series) -> pd.Series:
-        arr = s.astype(float).to_numpy()
-        p5, p95 = np.nanpercentile(arr, [5, 95])
-        if not np.isfinite(p5) or not np.isfinite(p95) or p95 == p5:
-            return pd.Series(np.nan, index=s.index)
-        scaled = (s - p5) / (p95 - p5)
-        return scaled.clip(0, 1)
+    fig, ax = plt.subplots(figsize=(12, 5))
 
-    # Use fragility_z as the base signal for robust scaling
-    d["fragility_robust_5_95"] = d.groupby(COL_BA)["fragility_z"].transform(robust_scale_5_95)
-
-    # --- Create stacked figure ---
-    fig, (ax1, ax2) = plt.subplots(
-        2, 1, figsize=(12, 9), sharex=True
-    )
-
-    # Panel (a): existing min–max scaled series (fragility_01)
     for ba in bas:
         sub = d[d[COL_BA] == ba].sort_values("date")
         ba_label = "CAISO" if ba == "CISO" else ba
-        ax1.plot(sub["date"], sub["fragility_01"], label=ba_label)
+        ax.plot(sub["date"], sub["fragility_01"], label=ba_label)
 
-    ax1.set_title("Daily Fragility (Min–max scaled 0–1) — Time Series")
-    ax1.set_ylabel("Fragility (0–1)")
-    ax1.legend(loc="upper right")
+    ax.set_ylabel("Fragility (0-1)", fontsize=16)
+    ax.set_xlabel("Date", fontsize=16)
+    ax.legend(loc="upper right")
 
-    # Panel (b): robust 5th–95th scaled series
-    for ba in bas:
-        sub = d[d[COL_BA] == ba].sort_values("date")
-        ba_label = "CAISO" if ba == "CISO" else ba
-        ax2.plot(sub["date"], sub["fragility_robust_5_95"], label=ba_label)
-
-    ax2.set_title("Daily Fragility (Robust-scaled 5th–95th pct, clipped) — Time Series")
-    ax2.set_ylabel("Fragility (robust 0–1)")
-    ax2.set_xlabel("Date")
-    ax2.legend(loc="upper right")
-
-    # Format x-axis as MM-YYYY (apply to bottom axis only)
-    ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m-%Y"))
-    plt.setp(ax2.xaxis.get_majorticklabels(), rotation=45, ha="right")
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%m-%Y"))
+    plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha="right")
 
     plt.tight_layout()
 
@@ -237,6 +209,49 @@ def plot_timeseries(daily: pd.DataFrame) -> None:
     plt.savefig(out, dpi=200)
     plt.close()
     print(f"Wrote plot: {out}")
+
+    # Appendix: three-panel — unfiltered, z-score composite, filtered (0-1)
+    raw = load_hourly()
+    daily_raw = engineer_daily_features(raw)
+    daily_raw = add_fragility_scores(daily_raw)
+    daily_raw["date"] = pd.to_datetime(daily_raw["date"])
+
+    fig, (ax_raw, ax_z, ax_01) = plt.subplots(3, 1, figsize=(12, 13), sharex=True)
+
+    for ba in bas:
+        ba_label = "CAISO" if ba == "CISO" else ba
+        sub_raw = daily_raw[daily_raw[COL_BA] == ba].sort_values("date")
+        sub = d[d[COL_BA] == ba].sort_values("date")
+        ax_raw.plot(sub_raw["date"], sub_raw["fragility_01"], label=ba_label)
+        ax_z.plot(sub["date"], sub["fragility_z"], label=ba_label)
+        ax_01.plot(sub["date"], sub["fragility_01"], label=ba_label)
+
+    ax_raw.set_title("Unfiltered (min-max scaled)")
+    ax_raw.set_ylabel("Fragility (0-1)", fontsize=16)
+    ax_raw.legend(loc="upper right")
+    ax_raw.grid(alpha=0.3)
+
+    ax_z.set_title("Filtered (z-score composite)")
+    ax_z.set_ylabel("Fragility (z-score)", fontsize=16)
+    ax_z.axhline(0, color="gray", linestyle="--", linewidth=0.8, alpha=0.6)
+    ax_z.legend(loc="upper right")
+    ax_z.grid(alpha=0.3)
+
+    ax_01.set_title("Filtered (min-max scaled)")
+    ax_01.set_ylabel("Fragility (0-1)", fontsize=16)
+    ax_01.set_xlabel("Date", fontsize=16)
+    ax_01.legend(loc="upper right")
+    ax_01.grid(alpha=0.3)
+
+    ax_01.xaxis.set_major_formatter(mdates.DateFormatter("%m-%Y"))
+    plt.setp(ax_01.xaxis.get_majorticklabels(), rotation=45, ha="right")
+
+    plt.tight_layout()
+
+    out_appendix = FIG_DIR / "fragility_timeseries_appendix.png"
+    plt.savefig(out_appendix, dpi=200)
+    plt.close()
+    print(f"Wrote plot: {out_appendix}")
 
 
 
@@ -248,9 +263,8 @@ def plot_distribution(daily: pd.DataFrame) -> None:
     for ba in bas:
         sub = daily[daily[COL_BA] == ba]["fragility_z"].dropna()
         plt.hist(sub, bins=40, alpha=0.5, label=ba)
-    plt.title("Distribution of Daily Fragility (z-score composite)")
-    plt.xlabel("fragility_z")
-    plt.ylabel("Count of days")
+    plt.xlabel("Fragility (z-score)", fontsize=16)
+    plt.ylabel("Count of Days", fontsize=16)
     plt.legend()
     plt.tight_layout()
 
@@ -315,6 +329,7 @@ def print_sanity_summary(daily: pd.DataFrame) -> None:
 def main() -> None:
     ensure_dirs()
     df = load_hourly()
+    df = repair_demand_spikes(df)
     daily = engineer_daily_features(df)
     daily = add_fragility_scores(daily)
 

@@ -352,79 +352,78 @@ def main():
     if not pd.api.types.is_datetime64_any_dtype(df["date"]):
         df["date"] = pd.to_datetime(df["date"])
 
-    # actual code logic in steps
-
-    # step 0: sanity checks
+    # step 0: sanity checks on full dataset
     step0_sanity_checks(df)
 
-    # step 1: build matrices
+    # step 1: build matrices from full dataset
     X_raw, meta = step1_build_matrices(df)
 
-    # step 2: standardize within BA
-    X_scaled = step2_standardize_within_ba(X_raw, meta)
-
-    # step 3: PCA
-    X_pca_df, _pca = step3_pca(X_scaled, n_components=3)
-
-    # step 4: K-Means clustering and interpretation
-
-    # step 4a: K-Means
-    clusters, _kmeans = step4a_kmeans(X_pca_df, k=4)
-    
-    feature_means, fragility_tails = step4a_interpret_clusters(
-        df=df,
-        clusters=clusters,
-        feature_cols=FEATURE_COLS,
-    )
-
-
-    # Attach clusters for inspection
-    df_out = pd.concat(
-        [df.reset_index(drop=True),
-         X_pca_df.reset_index(drop=True)],
-        axis=1
-    )
-    df_out["cluster"] = clusters
-
-    print("\n--- CLUSTER PREVIEW ---")
-    print(df_out[["cluster", "balancing_authority", "date"]].head())
-
-    # step 4b: plotting
-    df_plot = df_out.copy() # Prepare a copy for plotting
-    fig_dir = "reports/figures/unsupervised"
-    step4b_make_plots(df_plot=df_plot, fig_dir=fig_dir, k=4)
-
-
-    # Save outputs
-    from pathlib import Path
     output_dir = Path("data/processed/unsupervised")
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Save cluster feature means summary
-    feature_means_csv = output_dir / "cluster_feature_means.csv"
-    feature_means.to_csv(feature_means_csv, index=True)
-    print(f"\nWrote cluster feature means: {feature_means_csv}")
 
-    # Save cluster fragility tail summary
-    fragility_tails_csv = output_dir / "cluster_fragility_tails.csv"
-    fragility_tails.to_csv(fragility_tails_csv, index=True)
-    print(f"Wrote cluster fragility tails: {fragility_tails_csv}")
+    # ── Run steps 2–4 independently per BA ──────────────────────────────────
+    ba_results = []
 
-    
-    # Save to parquet
-    parquet_path = output_dir / "daily_with_clusters.parquet"
-    df_out.to_parquet(parquet_path, index=False)
-    print(f"Wrote clustered data (Parquet): {parquet_path}")
-    
-    # Save to CSV
-    csv_path = output_dir / "daily_with_clusters.csv"
-    df_out.to_csv(csv_path, index=False)
-    print(f"Wrote clustered data (CSV): {csv_path}")
-    
-    # Save to JSON
-    json_path = output_dir / "daily_with_clusters.json"
-    df_out.to_json(json_path, orient='records', date_format='iso', indent=2)
-    print(f"Wrote clustered data (JSON): {json_path}")
+    for ba in sorted(df["balancing_authority"].unique()):
+        print(f"\n{'='*55}")
+        print(f"  Processing BA: {ba}")
+        print(f"{'='*55}")
+
+        # Subset to this BA only (preserve original index for alignment)
+        ba_idx = meta[meta["balancing_authority"] == ba].index
+        X_raw_ba = X_raw.loc[ba_idx]
+        meta_ba = meta.loc[ba_idx]
+        df_ba = df.loc[ba_idx]
+
+        # step 2: standardize (single BA — scaler fits on this BA alone)
+        X_scaled_ba = step2_standardize_within_ba(X_raw_ba, meta_ba)
+
+        # step 3: PCA
+        X_pca_ba, _pca = step3_pca(X_scaled_ba, n_components=3)
+
+        # step 4a: K-Means + interpretation
+        clusters_ba, _kmeans = step4a_kmeans(X_pca_ba, k=4)
+
+        feature_means_ba, fragility_tails_ba = step4a_interpret_clusters(
+            df=df_ba,
+            clusters=clusters_ba,
+            feature_cols=FEATURE_COLS,
+        )
+
+        # Save per-BA summaries
+        ba_dir = output_dir / ba.lower()
+        ba_dir.mkdir(parents=True, exist_ok=True)
+
+        feature_means_ba.to_csv(ba_dir / "cluster_feature_means.csv", index=True)
+        fragility_tails_ba.to_csv(ba_dir / "cluster_fragility_tails.csv", index=True)
+        print(f"Wrote per-BA summaries: {ba_dir}")
+
+        # Build BA output dataframe
+        df_out_ba = pd.concat(
+            [df_ba.reset_index(drop=True),
+             X_pca_ba.reset_index(drop=True)],
+            axis=1
+        )
+        df_out_ba["cluster"] = clusters_ba
+
+        # step 4b: plots (saved per BA)
+        fig_dir = f"reports/figures/unsupervised/{ba.lower()}"
+        step4b_make_plots(df_plot=df_out_ba, fig_dir=fig_dir, k=4)
+
+        ba_results.append(df_out_ba)
+
+    # ── Recombine and save combined output ───────────────────────────────────
+    df_out = pd.concat(ba_results, ignore_index=True)
+
+    print("\n--- CLUSTER PREVIEW (combined) ---")
+    print(df_out[["cluster", "balancing_authority", "date"]].head())
+
+    df_out.to_parquet(output_dir / "daily_with_clusters.parquet", index=False)
+    df_out.to_csv(output_dir / "daily_with_clusters.csv", index=False)
+    df_out.to_json(output_dir / "daily_with_clusters.json",
+                   orient="records", date_format="iso", indent=2)
+
+    print(f"\nWrote combined clustered data: {output_dir}")
 
 
 
