@@ -1,0 +1,5 @@
+balancing_authority,season,component,mean_onset,median_onset,n_events_with_onset
+CISO,Summer,Max Ramp,-4.0,-4.0,4
+CISO,Summer,Peak Load,-5.5,-7.0,4
+PJM,Summer,Max Ramp,-4.5,-4.5,4
+PJM,Summer,Peak Load,-6.5,-6.5,4

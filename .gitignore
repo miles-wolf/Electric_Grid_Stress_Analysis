@@ -1,0 +1,25 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.vscode/
+
+# Secrets
+*.env
+.env*
+config/*.local.*
+
+# Raw data is re-downloadable from EIA (~92 MB); processed outputs are committed
+data/raw/
+
+# Stale nested copy (has its own empty .git + a venv)
+Electrical_Grid_Fragility_Analysis/
+
+# Personal notes + writing samples (not for a public repo)
+Writing_Samples/
+Insights/
+Report thoughts.txt
+Grid Fragility Analysis.txt
+
+# Old material
+_archive/

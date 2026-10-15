@@ -1,0 +1,11 @@
+k,balancing_authority,silhouette,davies_bouldin,selected
+2,CISO,0.511,0.786,No
+3,CISO,0.398,0.875,No
+4,CISO,0.398,0.859,Yes
+5,CISO,0.376,0.863,No
+6,CISO,0.372,0.837,No
+2,PJM,0.420,0.883,No
+3,PJM,0.411,0.850,No
+4,PJM,0.407,0.853,Yes
+5,PJM,0.387,0.815,No
+6,PJM,0.414,0.756,No

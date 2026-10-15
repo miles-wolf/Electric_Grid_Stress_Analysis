@@ -1,0 +1,16 @@
+ba,duration_metric,r_daily_peak_mw,r_z_peak,r_stress_z
+CAISO,% hours >= 95% of daily peak,-0.228,-0.228,-0.211
+CAISO,% hours >= 85% of daily peak,-0.472,-0.472,-0.408
+CAISO,% hours above annual P90,0.9,0.9,0.835
+CAISO,% hours above annual P75,0.932,0.932,0.86
+CAISO,"Smooth multiplier (z* = z_pct x max(0, z_peak))",-0.735,-0.735,-0.696
+PJM,% hours >= 95% of daily peak,-0.149,-0.149,-0.117
+PJM,% hours >= 85% of daily peak,-0.368,-0.368,-0.397
+PJM,% hours above annual P90,0.805,0.805,0.716
+PJM,% hours above annual P75,0.868,0.868,0.727
+PJM,"Smooth multiplier (z* = z_pct x max(0, z_peak))",-0.088,-0.088,-0.114
+Combined,% hours >= 95% of daily peak,-0.043,-0.189,-0.164
+Combined,% hours >= 85% of daily peak,-0.102,-0.42,-0.403
+Combined,% hours above annual P90,0.216,0.853,0.776
+Combined,% hours above annual P75,0.231,0.9,0.794
+Combined,"Smooth multiplier (z* = z_pct x max(0, z_peak))",0.079,-0.428,-0.423

@@ -1,0 +1,5 @@
+balancing_authority,feature,mean,std,n_days_training,training_year
+CISO,daily_peak_mw,29561.6932,4312.5014,365,2025
+CISO,daily_max_ramp_mw,2383.2767,635.3495,365,2025
+PJM,daily_peak_mw,109157.4548,17697.646,365,2025
+PJM,daily_max_ramp_mw,5749.3616,1360.4761,365,2025

@@ -1,0 +1,9 @@
+balancing_authority,season,event_rank,event_date,peak_stress_z,recovery_day,recovery_window_days,recovery_window_truncated
+CISO,Summer,1,2025-09-03,6.597,8,14,False
+CISO,Summer,2,2025-08-07,6.202,10,14,False
+CISO,Summer,3,2025-07-10,4.608,6,14,False
+CISO,Summer,4,2025-06-18,3.023,2,14,False
+PJM,Summer,1,2025-06-24,4.834,4,9,True
+PJM,Summer,2,2025-07-29,4.766,3,7,True
+PJM,Summer,3,2025-08-13,3.819,7,14,False
+PJM,Summer,4,2025-07-11,3.064,9,10,True

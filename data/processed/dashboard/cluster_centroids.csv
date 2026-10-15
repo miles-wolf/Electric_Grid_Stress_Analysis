@@ -1,0 +1,9 @@
+balancing_authority,cluster,cluster_label,centroid_z_peak,centroid_z_ramp,mean_stress_z,n_training_days
+CISO,0,Stable,-0.6457,-0.83,-1.4756,160
+CISO,2,Moderate,-0.312,0.4164,0.1044,108
+CISO,1,Elevated,1.0891,0.3345,1.4236,65
+CISO,3,Extreme,2.0691,2.0651,4.1342,32
+PJM,0,Stable,-0.8337,-1.3496,-2.1833,89
+PJM,2,Moderate,-0.6521,0.451,-0.2011,110
+PJM,3,Elevated,0.3664,-0.0852,0.2812,96
+PJM,1,Extreme,1.5823,1.124,2.7064,70

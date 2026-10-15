@@ -1,0 +1,15 @@
+balancing_authority,season,component,mean_onset,median_onset,n_events_with_onset,stress_tier
+CISO,Shoulder,Max Ramp,,,0,Elevated
+CISO,Shoulder,Peak Load,0.0,0.0,1,Elevated
+CISO,Summer,Max Ramp,-6.3,-6.5,6,Elevated
+CISO,Summer,Peak Load,-7.0,-7.0,5,Elevated
+PJM,Summer,Max Ramp,-6.2,-7.0,6,Elevated
+PJM,Summer,Peak Load,-7.0,-7.0,4,Elevated
+PJM,Winter,Max Ramp,-2.5,-2.5,2,Elevated
+PJM,Winter,Peak Load,-2.0,-2.0,4,Elevated
+CISO,Summer,Max Ramp,-4.0,-4.0,4,Extreme
+CISO,Summer,Peak Load,-5.5,-7.0,4,Extreme
+PJM,Summer,Max Ramp,-4.5,-4.5,4,Extreme
+PJM,Summer,Peak Load,-6.5,-6.5,4,Extreme
+PJM,Winter,Max Ramp,-2.5,-2.5,2,Extreme
+PJM,Winter,Peak Load,-3.5,-3.5,2,Extreme

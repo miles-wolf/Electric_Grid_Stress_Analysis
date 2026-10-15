@@ -1,0 +1,269 @@
+<?xml version="1.0" ?>
+<workbook version='18.1' xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <preferences/>
+  <datasources>
+    <datasource hasconnection="false" inline="true" name="Parameters">
+      <aliases enabled="yes"/>
+      <column caption="Peak MW Input" datatype="real" name="[Peak MW Input]" param-domain-type="range" role="measure" type="quantitative" value="40000">
+        <calculation class="tableau" formula="40000"/>
+        <range granularity="1" max="200000" min="0"/>
+      </column>
+      <column caption="Max Ramp MW Input" datatype="real" name="[Max Ramp MW Input]" param-domain-type="range" role="measure" type="quantitative" value="3000">
+        <calculation class="tableau" formula="3000"/>
+        <range granularity="1" max="12000" min="0"/>
+      </column>
+      <column caption="Calc BA" datatype="string" name="[Calc BA]" param-domain-type="list" role="dimension" type="nominal" value="&quot;CISO&quot;">
+        <calculation class="tableau" formula="&quot;CISO&quot;"/>
+        <members>
+          <member value="&quot;CISO&quot;"/>
+          <member value="&quot;PJM&quot;"/>
+        </members>
+      </column>
+    </datasource>
+    <datasource caption="daily_stress" inline="true" name="federated.daily_stress" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="daily_stress" name="textscan.daily_stress">
+            <connection class="textscan" directory="C:\Users\mltsw\OneDrive\Desktop\Projects\grid-fragility-analysis\tableau\data" filename="daily_stress.csv" header="yes" locale="en_US" separator=","/>
+          </named-connection>
+        </named-connections>
+        <relation connection="textscan.daily_stress" name="daily_stress.csv" table="[daily_stress#csv]" type="table"/>
+      </connection>
+      <column datatype="string" name="[balancing_authority]" role="dimension" type="nominal"/>
+      <column datatype="date" name="[date]" role="dimension" type="ordinal"/>
+      <column datatype="real" name="[daily_peak_mw]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_min_mw]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_max_ramp_mw]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_ramp_std]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_energy_mwh]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[hours_observed]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_range_mw]" role="measure" type="quantitative"/>
+      <column datatype="string" name="[season]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[z_daily_peak_mw]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[z_daily_max_ramp_mw]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[stress_z]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[stress_01]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[cluster]" role="measure" type="quantitative"/>
+      <column datatype="string" name="[cluster_label]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[ramp_dominant]" role="dimension" type="nominal"/>
+      <column caption="Stress_Z (Max)" datatype="real" name="[Stress_Z (Max)]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="MAX([stress_z])"/>
+      </column>
+      <column caption="Stress_01 (Avg)" datatype="real" name="[Stress_01 (Avg)]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="AVG([stress_01])"/>
+      </column>
+      <column caption="Most Stressed Day" datatype="date" name="[Most Stressed Day]" role="dimension" type="ordinal">
+        <calculation class="tableau" formula="{ FIXED [balancing_authority] : MAX( IF [stress_z] = { FIXED [balancing_authority] : MAX([stress_z]) } THEN [date] END ) }"/>
+      </column>
+      <column caption="High Stress Days" datatype="real" name="[High Stress Days]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="SUM( IF [stress_01] &gt; 0.7 THEN 1 ELSE 0 END )"/>
+      </column>
+      <column caption="Is High Stress" datatype="real" name="[Is High Stress]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [stress_01] &gt; 0.7 THEN 1 ELSE 0 END"/>
+      </column>
+      <column caption="High Stress Days (30d)" datatype="real" name="[High Stress Days (30d)]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="WINDOW_SUM( SUM([Is High Stress]), -29, 0 )"/>
+      </column>
+      <column caption="Peak Mean" datatype="real" name="[Peak Mean]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA] = &quot;CISO&quot; THEN 29561.6932 ELSE 109157.4548 END"/>
+      </column>
+      <column caption="Peak Std" datatype="real" name="[Peak Std]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA] = &quot;CISO&quot; THEN 4312.5014 ELSE 17697.646 END"/>
+      </column>
+      <column caption="Ramp Mean" datatype="real" name="[Ramp Mean]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA] = &quot;CISO&quot; THEN 2383.2767 ELSE 5749.3616 END"/>
+      </column>
+      <column caption="Ramp Std" datatype="real" name="[Ramp Std]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA] = &quot;CISO&quot; THEN 635.3495 ELSE 1360.4761 END"/>
+      </column>
+      <column caption="Input Z Peak" datatype="real" name="[Input Z Peak]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="([Peak MW Input] - [Peak Mean]) / [Peak Std]"/>
+      </column>
+      <column caption="Input Z Ramp" datatype="real" name="[Input Z Ramp]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="([Max Ramp MW Input] - [Ramp Mean]) / [Ramp Std]"/>
+      </column>
+      <column caption="Input Stress Z" datatype="real" name="[Input Stress Z]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="[Input Z Peak] + [Input Z Ramp]"/>
+      </column>
+      <column caption="cP_Stable" datatype="real" name="[cP_Stable]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA]=&quot;CISO&quot; THEN -0.6457 ELSE -0.8337 END"/>
+      </column>
+      <column caption="cP_Moderate" datatype="real" name="[cP_Moderate]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA]=&quot;CISO&quot; THEN -0.3120 ELSE -0.6521 END"/>
+      </column>
+      <column caption="cP_Elevated" datatype="real" name="[cP_Elevated]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA]=&quot;CISO&quot; THEN 1.0891 ELSE 0.3664 END"/>
+      </column>
+      <column caption="cP_Extreme" datatype="real" name="[cP_Extreme]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA]=&quot;CISO&quot; THEN 2.0691 ELSE 1.5823 END"/>
+      </column>
+      <column caption="cR_Stable" datatype="real" name="[cR_Stable]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA]=&quot;CISO&quot; THEN -0.8300 ELSE -1.3496 END"/>
+      </column>
+      <column caption="cR_Moderate" datatype="real" name="[cR_Moderate]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA]=&quot;CISO&quot; THEN 0.4164 ELSE 0.4510 END"/>
+      </column>
+      <column caption="cR_Elevated" datatype="real" name="[cR_Elevated]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA]=&quot;CISO&quot; THEN 0.3345 ELSE -0.0852 END"/>
+      </column>
+      <column caption="cR_Extreme" datatype="real" name="[cR_Extreme]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="IF [Calc BA]=&quot;CISO&quot; THEN 2.0651 ELSE 1.1240 END"/>
+      </column>
+      <column caption="d_Stable" datatype="real" name="[d_Stable]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="SQRT( POWER([Input Z Peak]-[cP_Stable],2) + POWER([Input Z Ramp]-[cR_Stable],2) )"/>
+      </column>
+      <column caption="d_Moderate" datatype="real" name="[d_Moderate]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="SQRT( POWER([Input Z Peak]-[cP_Moderate],2) + POWER([Input Z Ramp]-[cR_Moderate],2) )"/>
+      </column>
+      <column caption="d_Elevated" datatype="real" name="[d_Elevated]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="SQRT( POWER([Input Z Peak]-[cP_Elevated],2) + POWER([Input Z Ramp]-[cR_Elevated],2) )"/>
+      </column>
+      <column caption="d_Extreme" datatype="real" name="[d_Extreme]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="SQRT( POWER([Input Z Peak]-[cP_Extreme],2) + POWER([Input Z Ramp]-[cR_Extreme],2) )"/>
+      </column>
+      <column caption="Identified Cluster" datatype="string" name="[Identified Cluster]" role="dimension" type="nominal">
+        <calculation class="tableau" formula="IF [d_Stable] &lt;= [d_Moderate] AND [d_Stable] &lt;= [d_Elevated] AND [d_Stable] &lt;= [d_Extreme] THEN &quot;Stable&quot; ELSEIF [d_Moderate] &lt;= [d_Elevated] AND [d_Moderate] &lt;= [d_Extreme] THEN &quot;Moderate&quot; ELSEIF [d_Elevated] &lt;= [d_Extreme] THEN &quot;Elevated&quot; ELSE &quot;Extreme&quot; END"/>
+      </column>
+      <column caption="Cluster Mean Stress Z" datatype="real" name="[Cluster Mean Stress Z]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="CASE [Identified Cluster] WHEN &quot;Stable&quot; THEN IF [Calc BA]=&quot;CISO&quot; THEN -1.4756 ELSE -2.1833 END WHEN &quot;Moderate&quot; THEN IF [Calc BA]=&quot;CISO&quot; THEN 0.1044 ELSE -0.2011 END WHEN &quot;Elevated&quot; THEN IF [Calc BA]=&quot;CISO&quot; THEN 1.4236 ELSE 0.2812 END WHEN &quot;Extreme&quot; THEN IF [Calc BA]=&quot;CISO&quot; THEN 4.1342 ELSE 2.7064 END END"/>
+      </column>
+      <column caption="Stress Percentile" datatype="real" name="[Stress Percentile]" role="measure" type="quantitative">
+        <calculation class="tableau" formula="{ FIXED [balancing_authority] : SUM(IF [stress_z] &lt;= [Input Stress Z] THEN 1 ELSE 0 END) } / { FIXED [balancing_authority] : COUNT([date]) }"/>
+      </column>
+      <column caption="BA = Calc BA" datatype="boolean" name="[BA = Calc BA]" role="dimension" type="nominal">
+        <calculation class="tableau" formula="[balancing_authority] = [Calc BA]"/>
+      </column>
+    </datasource>
+    <datasource caption="top_days" inline="true" name="federated.top_days" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="top_days" name="textscan.top_days">
+            <connection class="textscan" directory="C:\Users\mltsw\OneDrive\Desktop\Projects\grid-fragility-analysis\tableau\data" filename="top_days.csv" header="yes" locale="en_US" separator=","/>
+          </named-connection>
+        </named-connections>
+        <relation connection="textscan.top_days" name="top_days.csv" table="[top_days#csv]" type="table"/>
+      </connection>
+      <column datatype="string" name="[balancing_authority]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[rank]" role="measure" type="quantitative"/>
+      <column datatype="date" name="[date]" role="dimension" type="ordinal"/>
+      <column datatype="real" name="[stress_z]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[stress_01]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_peak_mw]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_max_ramp_mw]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_range_mw]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[daily_ramp_std]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[hours_observed]" role="measure" type="quantitative"/>
+    </datasource>
+    <datasource caption="page3_data" inline="true" name="federated.page3_data" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="page3_data" name="textscan.page3_data">
+            <connection class="textscan" directory="C:\Users\mltsw\OneDrive\Desktop\Projects\grid-fragility-analysis\tableau\data" filename="page3_data.csv" header="yes" locale="en_US" separator=","/>
+          </named-connection>
+        </named-connections>
+        <relation connection="textscan.page3_data" name="page3_data.csv" table="[page3_data#csv]" type="table"/>
+      </connection>
+      <column datatype="string" name="[balancing_authority]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[record_type]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[season]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[stress_tier]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[cluster_label]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[component]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[mean_onset_days]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[median_onset_days]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[n_events_onset]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[relative_day]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[mean_z_peak]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[mean_z_ramp]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[mean_stress_z]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[std_stress_z]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[n_events_composite]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[n_days]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[season_pct]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[silhouette_score]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[k_clusters]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[centroid_z_peak]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[centroid_z_ramp]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[n_training_days]" role="measure" type="quantitative"/>
+    </datasource>
+    <datasource caption="hourly_peak_days" inline="true" name="federated.hourly_peak_days" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="hourly_peak_days" name="textscan.hourly_peak_days">
+            <connection class="textscan" directory="C:\Users\mltsw\OneDrive\Desktop\Projects\grid-fragility-analysis\tableau\data" filename="hourly_peak_days.csv" header="yes" locale="en_US" separator=","/>
+          </named-connection>
+        </named-connections>
+        <relation connection="textscan.hourly_peak_days" name="hourly_peak_days.csv" table="[hourly_peak_days#csv]" type="table"/>
+      </connection>
+      <column datatype="string" name="[label]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[balancing_authority]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[season]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[hour]" role="measure" type="quantitative"/>
+      <column datatype="string" name="[metric]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[value]" role="measure" type="quantitative"/>
+    </datasource>
+    <datasource caption="k_selection" inline="true" name="federated.k_selection" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="k_selection" name="textscan.k_selection">
+            <connection class="textscan" directory="C:\Users\mltsw\OneDrive\Desktop\Projects\grid-fragility-analysis\tableau\data" filename="k_selection_summary.csv" header="yes" locale="en_US" separator=","/>
+          </named-connection>
+        </named-connections>
+        <relation connection="textscan.k_selection" name="k_selection_summary.csv" table="[k_selection_summary#csv]" type="table"/>
+      </connection>
+      <column datatype="string" name="[k]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[balancing_authority]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[silhouette]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[davies_bouldin]" role="measure" type="quantitative"/>
+      <column datatype="string" name="[selected]" role="dimension" type="nominal"/>
+    </datasource>
+    <datasource caption="cluster_centroids" inline="true" name="federated.cluster_centroids" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="cluster_centroids" name="textscan.cluster_centroids">
+            <connection class="textscan" directory="C:\Users\mltsw\OneDrive\Desktop\Projects\grid-fragility-analysis\tableau\data" filename="cluster_centroids.csv" header="yes" locale="en_US" separator=","/>
+          </named-connection>
+        </named-connections>
+        <relation connection="textscan.cluster_centroids" name="cluster_centroids.csv" table="[cluster_centroids#csv]" type="table"/>
+      </connection>
+      <column datatype="string" name="[balancing_authority]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[cluster]" role="measure" type="quantitative"/>
+      <column datatype="string" name="[cluster_label]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[centroid_z_peak]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[centroid_z_ramp]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[mean_stress_z]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[n_training_days]" role="measure" type="quantitative"/>
+    </datasource>
+    <datasource caption="baseline_stats" inline="true" name="federated.baseline_stats" version="18.1">
+      <connection class="federated">
+        <named-connections>
+          <named-connection caption="baseline_stats" name="textscan.baseline_stats">
+            <connection class="textscan" directory="C:\Users\mltsw\OneDrive\Desktop\Projects\grid-fragility-analysis\tableau\data" filename="baseline_stats.csv" header="yes" locale="en_US" separator=","/>
+          </named-connection>
+        </named-connections>
+        <relation connection="textscan.baseline_stats" name="baseline_stats.csv" table="[baseline_stats#csv]" type="table"/>
+      </connection>
+      <column datatype="string" name="[balancing_authority]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[feature]" role="dimension" type="nominal"/>
+      <column datatype="real" name="[mean]" role="measure" type="quantitative"/>
+      <column datatype="real" name="[std]" role="measure" type="quantitative"/>
+      <column datatype="string" name="[n_days_training]" role="dimension" type="nominal"/>
+      <column datatype="string" name="[training_year]" role="dimension" type="nominal"/>
+    </datasource>
+  </datasources>
+  <worksheets>
+    <worksheet name="Start Here">
+      <table>
+        <view>
+          <datasources/>
+        </view>
+        <panes/>
+        <rows/>
+        <cols/>
+      </table>
+    </worksheet>
+  </worksheets>
+  <windows source-height="30">
+    <window class="worksheet" name="Start Here"/>
+  </windows>
+</workbook>
